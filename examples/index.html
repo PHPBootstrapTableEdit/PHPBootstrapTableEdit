@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <style>
+    body { display: block; width: 90%; margin: 40px auto; }
+    </style>
+</head>
+<body>
+<pre>
+
+<b>Quick Start Demo Using SQLite and PHP Webserver</b>
+
+    - PHP Requirements: PHP 7+ with mbstring and gd extensions enabled
+    - Database Requirement: SQLite 3, or MariaDB/MySQL, or PostgresSQL
+
+<b>Step 1: Create Database</b>
+
+    SQLite:
+        sqlite3 database.db &lt; database.sql
+
+    MariaDB/MySQl, PostgresSQL:
+        see commented sections inside database.sql
+
+<b>Step 2: Start PHP's Webserver</b>
+
+    from inside the examples folder:
+        php -S localhost:8080
+
+<b>Step 3: Open Web Browser to <a href='http://localhost:8080/'>http://localhost:8080/</a></b>
+
+    <a href='0_basic.php'>0_basic.php</a>
+    basic usage
+
+    <a href='1_typical.php'>1_typical.php</a>
+    typical usage - date formatting on index, validation hooks, image uploading
+
+    <a href='2_dependent_selects.php'>2_dependent_selects.php</a>
+    related dropdown selects - when country changes, options in provinces change
+
+    <a href='3_parent.php'>3_parent.php</a>
+    parent child relationship - when editing country, a link to manage provinces is displayed
+
+    <a href='4_passwords.php'>4_passwords.php</a>
+    password hashing, optional password input
+
+</pre>
+</body>
+</html>

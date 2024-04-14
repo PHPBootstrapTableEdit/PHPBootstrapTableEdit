@@ -1,0 +1,8 @@
+{
+    "name": "phpbootstraptableedit/phpbootstraptableedit",
+    "description": "Database table editor, datagrid, themed with Bootstrap css",
+    "license": "MIT",
+    "require": {
+        "php": ">=7.0.0"
+    }
+}
