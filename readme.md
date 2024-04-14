@@ -15,7 +15,7 @@
 ## License
 MIT
 
-## Screenshot
+## Screenshots
 ![index](screenshots/index.gif)
 ![edit](screenshots/edit.gif)
 
@@ -37,12 +37,9 @@ This project is currently beta, version 0.0.1
 
 assuming i get this registered on packist soon :|
 
-```json
-"require": {
+```
+composer require phpbootstraptableedit/phpbootstraptableedit
 
-    "phpbootstraptableedit/phpbootstraptableedit": ">=0.0.1",
-
-}
 ```
 
 
