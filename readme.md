@@ -6,7 +6,7 @@
   
 - File and image uploads to filesystem or into database field (blob)
 
-- No built-in validation, instead it's encouraged to use HTML's built-in validation features
+- No built-in validation, instead it's encouraged to use HTML's *pattern* attribute, and the *required* property
 
 - Hooks available to add validation, format data, or run code, on or after: inserts, updates, and deletes
 
@@ -34,8 +34,6 @@ This project is currently beta, version 0.0.1
 4. open web browser to http://localhost:8080
 
 ## Install from composer
-
-assuming i get this registered on packist soon :|
 
 ```
 composer require phpbootstraptableedit/phpbootstraptableedit
@@ -359,7 +357,7 @@ $o->index[field]['label'] = "Country";
 ```
 
 - **sql**
-specify sql statement to populate a select, radio, or checkbox input.
+Specify sql statement to populate a select, radio, or checkbox input.
 The first column is the value, the second column is the displayed title.
 Example: 
 ```php
@@ -376,12 +374,12 @@ $o->edit[field]['sql_param'] = array(":code" = $_GET['code']);
 # Custom HTML Attributes for File Uploads
 
 - **file_extension**
-file_extension defines what type of file to accept.
-For png, gif, jpg, any format is accepted, but the file_extension defines the final saved format.
-For non-images, only the specified extention is accepted; format and meta are not verified.    
+Define what type of file to accept.
+For images, valid formats are png, gif, jpg. Format and meta are verified at upload.
+For non-images, such as doc or pdf. Format and meta are not verified at upload.
 Example: 
 ```php
-$o->edit[field]['file_extension'] = 'png';
+$o->edit[field]['file_extension'] = 'png'; // this still allows gif or jpg to be uploaded, but saved binary will be png
 ```
 
 - **file_path**
@@ -392,7 +390,7 @@ Example:
 // store files here:
 $o->edit[field]['file_path'] = '/by/listing/a/path/file/is/saved/to/the/filesystem';
 
-// no path means save binaries in the database field; field must be a blob
+// no path means save binaries in the database field; field must be a blob, no filename is saved 
 $o->edit[field]['file_path'] = null;
 ```    
 
@@ -411,7 +409,7 @@ $o->edit[field]['height'] = 100;
 ```
 
 - **file_image_crop_or_resize** 
-Optional, specify how to resize the image when file_extention is png, gif, or jpg.
+Optional, specify how to resize the image when file_extention; for png, gif, or jpg only.
 'crop' creates an image accoring to width and height settings.
 'resize' maintains aspect ratio of the original image while limiting size to width and height settings.
 Valid options: 'crop', 'resize'
