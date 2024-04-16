@@ -24,7 +24,7 @@ MIT
 - SQLite 3, MariaDB/MySQL, or PostgreSQL
 
 ## Status
-This project is currently beta, version 0.0.2
+This project is currently beta, version 0.0.3
 
 ## Quick Demo using SQLite3 and PHP's built-in webserver
 
