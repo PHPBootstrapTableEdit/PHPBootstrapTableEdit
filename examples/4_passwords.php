@@ -19,6 +19,7 @@ $dbh = new PDO('sqlite:example.db');
 //$dbh = new PDO("pgsql:host=127.0.0.1;dbname=example;", "example", "example");
 
 require "../src/PHPBootstrapTableEdit.php";
+//require "../vendor/autoload.php";
 
 $o = new PHPBootstrapTableEdit\PHPBootstrapTableEdit($dbh);
 
