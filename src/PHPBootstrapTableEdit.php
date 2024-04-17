@@ -3,9 +3,8 @@
 /**
  * https://github.com/PHPBootstrapTableEdit/PHPBootstrapTableEdit
  *
- * @author <iansoko@gmail.com>
  * @license MIT
- * @version 0.0.1
+ * @version 0.0.4
  *
  */
 
@@ -346,7 +345,7 @@ class PHPBootstrapTableEdit
             $html .= $this->get_input($field, $value, 'add');
         }
 
-        // form action helps here, it keeps the same querystring even on insert validation returns
+        // form's action helps here, it keeps the same querystring even on insert validation returns
         echo "
         <form id='pbte' class='pbte_add pbte_add_edit row' method='post' action='?_action=add&{$this->identity_name}=$id&$qs' enctype='multipart/form-data'>
         $alert
@@ -418,8 +417,8 @@ class PHPBootstrapTableEdit
             $html .= $this->get_input($field, $value, 'edit');
         }
 
-        // 'flex-row-reverse' so enter submit runs update not delete
-        // form action helps here, it keeps the same querystring even on insert/update/delete validation returns
+        // 'flex-row-reverse' so enter key submits 'update', and not 'delete'
+        // form's action helps here, it keeps the same querystring even on insert/update/delete validation returns
         echo "
         <form id='pbte' class='pbte_edit pbte_add_edit row' method='post' action='?_action=edit&{$this->identity_name}=$id&$qs' enctype='multipart/form-data'>
         $alert
@@ -654,8 +653,6 @@ class PHPBootstrapTableEdit
     public function query($sql, $sql_param = array())
     {
 
-        // purpose: wrapper for pdo db call
-        // returns: mixed depending on input
         $sth = $this->dbh->prepare($sql);
         $sth->execute($sql_param);
 
@@ -802,7 +799,7 @@ class PHPBootstrapTableEdit
     }
 
     /**
-     * enhanded ob_end_clean(), used before sending binary files in get_file(), can be used for ajax calls
+     * enhanced ob_end_clean(), used before sending binary files in get_file(), can be used for ajax calls
      *
      * @return void
      */
@@ -915,8 +912,6 @@ class PHPBootstrapTableEdit
             $html = $msg['html'] ?? '';
         }
 
-
-
         // wrap message in an alert
         $text = $this->c($text);
         if (strlen($text) > 0) {
@@ -938,9 +933,6 @@ class PHPBootstrapTableEdit
      */
     public function get_pagination($sql, $sql_param, $page, $limit)
     {
-
-        // purpose: render pagination
-        // returns: html, example: < 1 ... 3 *4* 5 ... 10  >
 
         // count how many records we have
         $sql = "select count(1) as records from ($sql)";
@@ -1038,8 +1030,6 @@ class PHPBootstrapTableEdit
      */
     public function get_query_string($exclude = array())
     {
-
-        // purpose: carry data in querystring to keep state
 
         // system parameters to always carry on the querystring
         $arr = ['_page', '_order_by', '_desc', '_search', '_pagination_off'];
