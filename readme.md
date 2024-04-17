@@ -384,7 +384,7 @@ Optional, when file_extention is png, gif, or jpg, specify a desired width.
 
 Example:
 ```php
-$o->edit[field]['width'] = 100;
+$o->edit[field]['file_image_width'] = 100;
 ```
 
 - **file_image_height** (int) 
@@ -392,7 +392,7 @@ Optional, when file_extention is png, gif, or jpg, specify a desired height.
 
 Example:
 ```php
-$o->edit[field]['height'] = 100;
+$o->edit[field]['file_image_height'] = 100;
 ```
 
 - **file_image_crop_or_resize** (string, 'crop' or 'resize')
