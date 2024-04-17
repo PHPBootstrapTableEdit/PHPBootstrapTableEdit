@@ -133,22 +133,22 @@ $o->run();
 
 ## Properties
 
-- **charset** (string), output charset, default: 'UTF-8'
+**charset** (string), output charset, default: 'UTF-8'
 
-- **table_name** (string), database table 
+**table_name** (string), database table 
 
-- **identity_name** (string), the auto increment id field in the table, typically 'id'
+**identity_name** (string), the auto increment id field in the table, typically 'id'
 
-- **index_sql** (string), sql query to define the opening html table listing all records
+**index_sql** (string), sql query to define the opening html table listing all records
 
-- **index_sql_param** (array), parameters for index_sql 
+**index_sql_param** (array), parameters for index_sql 
 
 Example:
 ```php
 $o->index_sql_param = [':_search' => '%' . trim($_GET['search'] ?? '')  . '%'];
 ```
 
-- **add_sql** (string), sql query to define what fields to display on the add page, also what fields are in the insert
+**add_sql** (string), sql query to define what fields to display on the add page, also what fields are in the insert
 
 Example:
 ```php
@@ -156,23 +156,23 @@ Example:
 $o>->add_sql = "select field1, field2, id from table where id = 0";
 ```
 
-- **add_sql_param** (array), named parameters for add_sql, typically not required since no records are retrieved
+**add_sql_param** (array), named parameters for add_sql, typically not required since no records are retrieved
 
-- **edit_sql** (string), sql query to define what fields to display on the edit page, also what fields are used in the update 
+**edit_sql** (string), sql query to define what fields to display on the edit page, also what fields are used in the update 
 
 Example:
 ```php
 $o>->edit_sql = "select field1, field2, id from table where id = :id";
 ```
 
-- **edit_sql_param** (array), named parameters for edit_sql
+**edit_sql_param** (array), named parameters for edit_sql
 
 Example:
 ```php
 $o->add_sql_param[':id'] = $_GET['id'] ?? $_POST['id'];
 ```
 
-- **add** (array), define how fields in add_sql are rendered on the add form
+**add** (array), define how fields in add_sql are rendered on the add form
 
 Example:
 ```php
@@ -182,7 +182,7 @@ $o->add['country']['sql']      = 'select code, title from countries'; // custom 
 $o->add['country']['colspan']  = '3'; // layout
 ```
 
-- **edit** (array), define how fields in edit_sql are rendered on the edit form
+**edit** (array), define how fields in edit_sql are rendered on the edit form
 
 Example:
 ```php
@@ -196,29 +196,24 @@ $o->edit['country']['colspan']  = '3'; // layout
 ```
 
 
-- **index** (array), define hooks to render fields on the opening table, function name, or closure
+**index** (array), define hooks to render fields on the opening table, function name, or closure
 
 Example:
 ```php
 $o->index['create_date']['function'] = function($data) { return date('d/m/Y', strtotime($data['value'])); };
 ```
 
-- **floating** (bool), enable Bootstrap's floating labels on add and edit forms. https://getbootstrap.com/docs/5.3/forms/floating-labels/
+**floating** (bool), enable Bootstrap's floating labels on add and edit forms. https://getbootstrap.com/docs/5.3/forms/floating-labels/
 
-Example:
-```php
-$o->floating = true; // default is false
-```
+**nonce_name** (string), csrf field name, default 'nonce'
 
-- **nonce_name** (string), csrf field name, default 'nonce'
+**nonce_value** (string), csrf field value
 
-- **nonce_value** (string), csrf field value
+**limit** (int), pagination limit records/page, 0 = off, default = 100
 
-- **limit** (int), pagination limit records/page, 0 = off, default = 100
+**ellipse_at** (int), truncate text on index table, 0 = off, default = 0
 
-- **ellipse_at** (int), truncate text on index table, 0 = off, default = 0
-
-- **query_string_carry** (array) entries in this array added to all query strings, useful to carry data from page to page
+**query_string_carry** (array) entries in this array added to all query strings, useful to carry data from page to page
 
 Example:
 ```php
@@ -227,21 +222,21 @@ Example:
 $o->query_string_carry[] = 'parent_id';
 ```
 
-- **i18n** (array), associative array containing all localization settings
+**i18n** (array), associative array containing all localization settings
 
 Defaults:
 ```php
 $o->i18n['no_records' => 'No Records', 'not_found' => 'Not Found', 'search' => 'Search', 'edit' => 'Edit', 'add' => 'Add', 'add_2' => 'Add', 'back' => 'Back', 'delete' => 'Delete', 'update' => 'Update', 'delete_file' => 'mark for removal', 'update_success' => 'Updated', 'insert_success' => 'Added', 'delete_success' => 'Deleted'];
 ```
 
-- **css** (array), css class settings
+**css** (array), css class settings
 
 Defaults:
 ```php
 $o->css['index_table' => 'table-striped table-hover', 'index_active' => 'table-primary', 'pagination' => ''];
 ```
 
-- **redirect** (bool) helpful when debugging, set to false and page will not redirect after insert/update/delete
+**redirect** (bool) helpful when debugging, set to false and page will not redirect after insert/update/delete
 
 ## 'on' Event Hooks
 
