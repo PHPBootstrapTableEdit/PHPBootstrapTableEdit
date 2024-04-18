@@ -4,7 +4,7 @@
  * https://github.com/PHPBootstrapTableEdit/PHPBootstrapTableEdit
  *
  * @license MIT
- * @version 0.0.4
+ * @version 0.0.5
  *
  */
 
@@ -41,7 +41,7 @@ class PHPBootstrapTableEdit
     public $ellipse_at = 0; // truncate text on index table, 0 = off
     public $query_string_carry = []; // carry data within the query string, useful to carry parent id when editing child records
 
-    // overide these values for localization
+    // override these values for localization
     public $i18n = ['no_records' => 'No Records', 'not_found' => 'Not Found', 'search' => 'Search', 'edit' => 'Edit', 'add' => 'Add', 'add_2' => 'Add', 'back' => 'Back', 'delete' => 'Delete', 'update' => 'Update', 'delete_file' => 'mark for removal', 'update_success' => 'Updated', 'insert_success' => 'Added', 'delete_success' => 'Deleted'];
 
     // opinionated class settings
@@ -1126,7 +1126,7 @@ class PHPBootstrapTableEdit
         $settings = [];
         foreach (($options[$field] ?? array()) as $key => $val) {
 
-            // these are not normal atributes
+            // these are custom attributes, don't append to $attr string
             if (array_search($key, $add_to_settings) !== false) {
                 $settings[$key] = $val;
                 continue;
@@ -1156,7 +1156,7 @@ class PHPBootstrapTableEdit
         // text title for the field, optional set in $add/$edit[field]['rename']
         $label_text = $this->get_label($field, $add_or_edit);
 
-        // only needed for passing to call_user_func, keeping params consistant index()
+        // only needed for passing to call_user_func, keeping params consistent index()
         $id = $_POST[$this->identity_name] ?? $_GET[$this->identity_name] ?? null;
 
         $type = $settings['type'] ?? '';
@@ -1215,7 +1215,7 @@ class PHPBootstrapTableEdit
             $file_class = 'input-group';
         }
 
-        // floating input layout, allow indiv
+        // floating input layout
         if ($floating) {
             return "
             <div class='col-sm-$colspan mb-4 $div_class '>
@@ -1355,7 +1355,7 @@ class PHPBootstrapTableEdit
 
         $label = "<label for='f_$field' class='form-label'>$label</label>";
 
-        // bootstap style of datalist
+        // bootstrap style of datalist
         if ($is_datalist) {
             $html = "
             <input id='f_$field' list='f_{$field}_datalist' class='form-control $class' $attr>
@@ -1582,7 +1582,7 @@ class PHPBootstrapTableEdit
     public function get_filename($filename, $ext, $path, $field)
     {
 
-        // no path means nothing to do here, file is going into the datatbase as a blob
+        // no path means nothing to do here, file is going into the database as a blob
         if (strlen($path) == 0) {
             return;
         }

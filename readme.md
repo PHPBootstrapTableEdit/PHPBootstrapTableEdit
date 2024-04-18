@@ -342,7 +342,7 @@ Example:
 $o->edit[field]['sql'] = "select code, title from countries";
 ```
 
-- **sql_param** (array), assocaiate array to hold named parameters for sql
+- **sql_param** (array), associative array to hold named parameters for sql
 
 Example: 
 ```php
