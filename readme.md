@@ -69,13 +69,13 @@ $o->edit = [];            // field settings on edit form
 > Instead, use *sql_param* arrays to safely pass input.
 
 > [!TIP]
-> Use the *nonce* property to prevent Cross-site Request Forgery attacks (CSRF).
+> Use the *nonce* properties to prevent Cross-site Request Forgery attacks (CSRF).
 
 
 ## Basic Example 
 ```php
 
-$dbh = new PDO('sqlite:database.db');
+$dbh = new PDO('sqlite:example.db');
 
 $o = new PHPBootstrapTableEdit\PHPBootstrapTableEdit($dbh);
 
