@@ -1,4 +1,9 @@
-<?php ob_start();?>
+<?php
+declare(strict_types=1); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ob_start();
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,6 +13,7 @@
     <style>
     body { display: block; width: 90%; margin: 20px auto; }
     #pbte.pbte_add_edit { max-width: 800px; margin: 0 auto; }
+    #pbte.pbte_index a.index_add { white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -15,7 +21,6 @@
 <h3>Countries</h3>
 
 <?php
-error_reporting(E_ALL);
 
 $dbh = new PDO('sqlite:example.db');
 //$dbh = new PDO("mysql:host=127.0.0.1;dbname=example;", "example", "example");

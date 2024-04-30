@@ -2,7 +2,10 @@
 
 // html reply to display province matching the requested country
 
+declare(strict_types=1); 
 error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ob_start();
 
 $dbh = new PDO('sqlite:example.db');
 //$dbh = new PDO("mysql:host=127.0.0.1;dbname=example;", "example", "example");

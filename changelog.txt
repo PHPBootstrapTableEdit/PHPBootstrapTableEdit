@@ -1,4 +1,9 @@
 
+0.0.7 2024-04-29
+- fixed html escape in textarea
+- moved html into views
+- added type declarations and strict settings in examples
+
 0.0.6 2024-04-19
 - fixing docs and comment typos
 

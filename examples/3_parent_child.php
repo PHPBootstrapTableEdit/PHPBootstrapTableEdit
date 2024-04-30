@@ -1,4 +1,9 @@
-<?php ob_start();?>
+<?php
+declare(strict_types=1); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ob_start();
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -9,13 +14,13 @@
     body { display: block; width: 90%; margin: 20px auto; }
     #pbte.pbte_add_edit { max-width: 800px; margin: 0 auto; }
     #pbte.pbte_add_edit input[name=country] { background-color: #ccc; }
+    #pbte.pbte_index a.index_add { white-space: nowrap; }
     </style>
 </head>
 <body>
 
 
 <?php
-error_reporting(E_ALL);
 
 $country = trim(strtoupper($_GET['country'] ?? '')); // parent country code
 

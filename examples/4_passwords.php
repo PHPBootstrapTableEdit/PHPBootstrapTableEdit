@@ -1,4 +1,9 @@
-<?php ob_start();?>
+<?php
+declare(strict_types=1); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ob_start();
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -12,7 +17,6 @@
 <body>
 
 <?php
-error_reporting(E_ALL);
 
 $dbh = new PDO('sqlite:example.db');
 //$dbh = new PDO("mysql:host=127.0.0.1;dbname=example;", "example", "example");

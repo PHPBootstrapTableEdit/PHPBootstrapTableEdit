@@ -1,4 +1,9 @@
-<?php ob_start();?>
+<?php
+declare(strict_types=1); 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ob_start();
+?>
 <!doctype html>
 <html lang="en">
 <head>
@@ -18,7 +23,6 @@
 
 
 <?php
-error_reporting(E_ALL);
 
 $dbh = new PDO('sqlite:example.db');
 //$dbh = new PDO("mysql:host=127.0.0.1;dbname=example;", "example", "example");
@@ -66,8 +70,8 @@ $o->edit['country']['sql'] = 'select code, title from countries'; // define how 
 $o->edit['photo']['type'] = 'file';
 $o->edit['photo']['file_extension'] = 'png'; // all things file_* are library settings, not html attributes
 $o->edit['photo']['file_image_crop_or_resize'] = 'crop';
-$o->edit['photo']['file_image_width'] = '100';
-$o->edit['photo']['file_image_height'] = '100';
+$o->edit['photo']['file_image_width'] = 100;
+$o->edit['photo']['file_image_height'] = 100;
 $o->edit['photo']['file_path'] = ''; // empty file_path means store the binary in the database, not the filesystem
 
 $o->edit['create_date']['type'] = 'date';
@@ -89,12 +93,12 @@ $o->edit['email']['function'] = function ($data) {
 };
 
 // 12 column layout - colspan = 4 creates a three column layout
-$o->edit['title']['colspan'] = '4';
-$o->edit['photo']['colspan'] = '4';
-$o->edit['email']['colspan'] = '4';
-$o->edit['country']['colspan'] = '4';
-$o->edit['is_active']['colspan'] = '4';
-$o->edit['create_date']['colspan'] = '4';
+$o->edit['title']['colspan'] = 4;
+$o->edit['photo']['colspan'] = 4;
+$o->edit['email']['colspan'] = 4;
+$o->edit['country']['colspan'] = 4;
+$o->edit['is_active']['colspan'] = 4;
+$o->edit['create_date']['colspan'] = 4;
 
 // copy all 'edit' setting into 'add', the add form is almost the same settings
 $o->add = $o->edit;

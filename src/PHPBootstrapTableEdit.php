@@ -4,7 +4,7 @@
  * https://github.com/PHPBootstrapTableEdit/PHPBootstrapTableEdit
  *
  * @license MIT
- * @version 0.0.6
+ * @version 0.0.7
  *
  */
 
@@ -69,7 +69,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function __construct($dbh)
+    public function __construct(\PDO $dbh)
     {
 
         $this->dbh = $dbh;
@@ -81,7 +81,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
 
         if (!function_exists('mb_strlen')) {
@@ -113,7 +113,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function index()
+    public function index(): void
     {
 
         $limit = $this->limit;
@@ -160,141 +160,8 @@ class PHPBootstrapTableEdit
         }
 
         $result = $this->query($index_sql, $index_sql_param);
-        $last_column = count($result[0] ?? []) - 1;
 
-        // query string for table header, keep _page=0, it means pagination turned off
-        $exclude = ['_order_by', '_desc'];
-        if (($_GET['_page'] ?? '') !== '0') {
-            $exclude[] = '_page';
-        }
-
-        $qs = $this->get_query_string($exclude);
-
-        // render table header
-        $i = 0;
-        $thead = '';
-        $desc_inverse = intval(!$desc);
-        foreach (($result[0] ?? array()) as $field => $x) {
-
-            // no text on the last edit link column
-            if ($i++ == $last_column && $field == $this->identity_name) {
-                $field = "";
-            }
-
-            $thead .= "<th><a href='?_order_by=$i&_desc=$desc_inverse&$qs'>" . $this->get_label($field, 'index') . "</th>";
-        }
-
-        $qs = $this->get_query_string([$this->identity_name]);
-        if (strlen($qs) > 0) {
-            $qs .= "&";
-        }
-
-        // render table body
-        $tbody = '';
-        foreach ($result as $row) {
-
-            $i = 0;
-            $td = "";
-            $id = $row[$this->identity_name] ?? null;
-            foreach ($row as $field => $value) {
-
-                // 3 options: edit link, user defined function, or plain text
-                if ($i++ == $last_column && $field == $this->identity_name) {
-                    $str = "<a href='?_action=edit&$qs{$this->identity_name}=$value' class='edit'>{$this->i18n['edit']}</a>";
-                } elseif (isset($this->index[$field]['function'])) {
-                    $str = call_user_func($this->index[$field]['function'], ['field' => $field, 'value' => $value, 'id' => $id]);
-                } else {
-                    $str = $this->c($value, $this->ellipse_at);
-                }
-
-                $td .= "<td>$str</td>";
-            }
-
-            // highlight active row
-            $class = '';
-            if (($_GET[$this->identity_name] ?? '') == ($row[$this->identity_name] ?? 0)) {
-                $class = $this->css['index_active'];
-            }
-
-            $tbody .= "<tr class='$class'>$td</tr>\n";
-        }
-
-        // pagination and search layout
-        $qs = $this->get_query_string(["page"]);
-        $html = "
-        <div class='row d-flex flex-wrap'>
-            <div class='col-md-1 mb-3'>
-                <a href='?_action=add&$qs' class='btn btn-primary'>{$this->i18n['add']}</a>
-            </div>
-            <div class='col-md-7 mb-1'>
-                $pagination
-            </div>
-            <div class='col-md-4 mb-3 text-end' xstyle='border: 1px solid red; margin-left: 100px;'>
-                <div class='input-group'>
-                    <input type='text' class='form-control form-inline' style='width: 100px' name='_search' value='$search'>
-                    <button type='submit' class='btn btn-primary'>{$this->i18n['search']}</button>
-                </div>
-            </div>
-        </div>
-        ";
-
-        // append table
-        if (strlen($tbody) > 0) {
-            $html .= "
-            <table class='table {$this->css['index_table']}'>
-                <thead>$thead</thead>
-                <tbody>$tbody</tbody>
-            </table>
-            ";
-        }
-
-        // bottom pagination
-        if (strlen($pagination) > 0) {
-            $html .= "
-            <div class='container'>
-                <div class='row'>
-                    <div class='col'>
-                        $pagination
-                    </div>
-                </div>
-            </div>
-            ";
-        }
-
-        // append 'no data' message
-        if (strlen($tbody) == 0) {
-            $html .= $this->alert($this->i18n['no_records']);
-        }
-
-        $alert = '';
-        if ($success == 3) {
-            $alert = $this->alert($this->i18n['delete_success'], 'alert-success');
-        }
-
-        // query_string_carry - bring data along with the search form
-        $carry = '';
-        foreach ($this->query_string_carry as $key) {
-
-            $val = $_GET[$key] ?? null;
-
-            if (is_string($val)) {
-                $carry .= "<input type='hidden' name='$key' value='" . $this->c($val) . "'>\n";
-            }
-
-            if (is_array($val)) {
-                foreach ($val as $v) {
-                    $carry .= "<input type='hidden' name='{$key}[]' value='" . $this->c($v) . "'>\n";
-                }
-            }
-
-        }
-
-        echo "
-        <form id='pbte' class='pbte_index'>
-        $alert
-        $html
-        $carry
-        </form>";
+        require "views/index.php";
 
     }
 
@@ -305,7 +172,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function add($error = null)
+    public function add(mixed $error = null): void
     {
 
         $id = intval($_GET[$this->identity_name] ?? $_POST[$this->identity_name] ?? 0);
@@ -317,47 +184,8 @@ class PHPBootstrapTableEdit
 
         $result = $this->query_meta($this->add_sql, $this->add_sql_param);
 
-        $alert = $this->alert($error);
-
-        // render fields
-        $html = '';
-        $row = $result[0] ?? [];
-        foreach ($row as $field => $x) {
-
-            // load value attribute, if defined
-            $value = $this->add[$field]['value'] ?? '';
-
-            // allow input from get, like query_string_carry elements
-            // also, reload input on validation repost
-            if (empty($value)) {
-                $value = $_POST[$field] ?? $_GET[$field] ?? '';
-                if (is_array($value)) {
-                    $value = json_encode($value);
-                }
-
-            }
-
-            // no id in the add form
-            if ($field == $this->identity_name) {
-                continue;
-            }
-
-            $html .= $this->get_input($field, $value, 'add');
-        }
-
-        // form's action helps here, it keeps the same querystring even on insert validation returns
-        echo "
-        <form id='pbte' class='pbte_add pbte_add_edit row' method='post' action='?_action=add&{$this->identity_name}=$id&$qs' enctype='multipart/form-data'>
-        $alert
-        $html
-         <div class='d-flex justify-content-center' id='button_bar'>
-            <a href='?id=$id&$qs' class='mx-2 btn btn-secondary'>{$this->i18n['back']}</a>
-            <button type='submit' class='mx-2 btn btn-primary' name='_action' value='insert'>{$this->i18n['add_2']}</button>
-        </div>
-        <input type='hidden' name='{$this->nonce_name}' value='{$this->nonce_value}'>
-        </form>
-        ";
-
+        require "views/add.php";
+        
     }
 
     /**
@@ -367,7 +195,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function edit($error = null)
+    public function edit(mixed $error = null): void
     {
 
         $id = intval($_GET[$this->identity_name] ?? $_POST[$this->identity_name] ?? 0);
@@ -381,57 +209,7 @@ class PHPBootstrapTableEdit
 
         $result = $this->query($this->edit_sql, $this->edit_sql_param);
 
-        // display error if we can't find data
-        if (count($result) == 0) {
-            echo $this->alert($this->i18n['not_found']);
-            return;
-        }
-
-        $alert = '';
-        if ($success == 1) {
-            $alert = $this->alert($this->i18n['insert_success'], 'alert-success');
-        }
-
-        if ($success == 2) {
-            $alert = $this->alert($this->i18n['update_success'], 'alert-success');
-        }
-
-        if (!empty($error)) {
-            $alert = $this->alert($error);
-        }
-
-        // render fields
-        $html = '';
-        $row = $result[0] ?? [];
-        foreach ($row as $field => $value) {
-
-            // reload input last post, if error returned from on_update
-            if ($action == 'update') {
-                $value = $_POST[$field] ?? '';
-                if (is_array($value)) {
-                    $value = json_encode($value);
-                }
-
-            }
-
-            $html .= $this->get_input($field, $value, 'edit');
-        }
-
-        // 'flex-row-reverse' so enter key submits 'update', and not 'delete'
-        // form's action helps here, it keeps the same querystring even on insert/update/delete validation returns
-        echo "
-        <form id='pbte' class='pbte_edit pbte_add_edit row' method='post' action='?_action=edit&{$this->identity_name}=$id&$qs' enctype='multipart/form-data'>
-        $alert
-        $html
-         <div class='d-flex flex-row-reverse justify-content-center' id='button_bar'>
-            <button type='submit' class='mx-2 btn btn-primary' name='_action' value='update'>{$this->i18n['update']}</button>
-            <button type='submit' class='mx-2 btn btn-danger'  name='_action' value='delete'>{$this->i18n['delete']}</button>
-            <a href='?id=$id&$qs' class='mx-2 btn btn-secondary'>{$this->i18n['back']}</a>
-        </div>
-        <input type='hidden' name='{$this->identity_name}' value='$id'>
-        <input type='hidden' name='{$this->nonce_name}' value='{$this->nonce_value}'>
-        </form>
-        ";
+        require "views/edit.php";
 
     }
 
@@ -440,7 +218,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function insert()
+    public function insert(): void
     {
 
         $qs = $this->get_query_string();
@@ -504,8 +282,7 @@ class PHPBootstrapTableEdit
             header("Location: $url");
         }
 
-        echo "<a href='$url'>continue</a>";
-
+        $this->continue_link($url);
     }
 
     /**
@@ -513,7 +290,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function update()
+    public function update(): void
     {
 
         $qs = $this->get_query_string();
@@ -534,7 +311,8 @@ class PHPBootstrapTableEdit
         // get fields we are allowing update on, the fields in edit_sql
         $result = $this->query($this->edit_sql, $this->edit_sql_param);
         if (count($result) == 0) {
-            return $this->alert($this->i18n['not_found']);
+            echo $this->alert($this->i18n['not_found']);
+            return;
         }
 
         // gather data
@@ -596,7 +374,7 @@ class PHPBootstrapTableEdit
             header("Location: $url");
         }
 
-        echo "<a href='$url'>continue</a>";
+        $this->continue_link($url);
 
     }
 
@@ -605,7 +383,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function delete()
+    public function delete(): void
     {
 
         $qs = $this->get_query_string();
@@ -638,7 +416,7 @@ class PHPBootstrapTableEdit
             header("Location: $url");
         }
 
-        echo "<a href='$url'>$url</a>";
+        $this->continue_link($url);
 
     }
 
@@ -648,9 +426,9 @@ class PHPBootstrapTableEdit
      * @param string $sql          the sql string
      * @param array  $sql_param    named parameters for sql
      *
-     * @return mixed 'select' returns array result, 'insert' returns new id, 'update'+'delete' return rows affected
+     * @return mixed               'select' returns array result, 'insert' returns new id, 'update'+'delete' return rows affected
      */
-    public function query($sql, $sql_param = array())
+    public function query(string $sql, array $sql_param = []): mixed
     {
 
         $sth = $this->dbh->prepare($sql);
@@ -676,9 +454,9 @@ class PHPBootstrapTableEdit
      * @param string $sql          the sql string
      * @param array  $sql_param    named parameters for sql
      *
-     * @return array keys, the field names
+     * @return array               array containing the field names
      */
-    public function query_meta($sql, $sql_param = array())
+    public function query_meta(string $sql, array $sql_param = []): array
     {
 
         $sth = $this->dbh->prepare($sql);
@@ -696,14 +474,14 @@ class PHPBootstrapTableEdit
     }
 
     /**
-     * wrapper for htmlspecialchars, c/clean output
+     * wrapper for htmlspecialchars, c/clean escape output
      *
-     * @param string $str           the string to escape
+     * @param mixed  $str           the string to escape
      * @param int    $ellipse_at    optional, truncate long output and add ellipses
      *
      * @return string
      */
-    public function c($str, $ellipse_at = 0)
+    public function c(mixed $str, int $ellipse_at = 0)
     {
 
         $str = (string) $str;
@@ -724,7 +502,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function get_file()
+    public function get_file(): void
     {
 
         $id = intval($_GET[$this->identity_name] ?? 0);
@@ -803,7 +581,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function ob_end_clean()
+    public function ob_end_clean(): void
     {
 
         $level = 0;
@@ -831,7 +609,7 @@ class PHPBootstrapTableEdit
      *
      * @return int number of files deleted
      */
-    public function delete_file($id, $field = null)
+    public function delete_file(int $id, string $field = null)
     {
 
         $options = $this->edit;
@@ -893,7 +671,7 @@ class PHPBootstrapTableEdit
      *
      * @return string html
      */
-    public function alert($msg, $class = 'alert-danger')
+    public function alert(mixed $msg, string $class = 'alert-danger'): string
     {
 
         // no input, nothing to do
@@ -912,11 +690,7 @@ class PHPBootstrapTableEdit
             $html = $msg['html'] ?? '';
         }
 
-        // wrap message in an alert
-        $text = $this->c($text);
-        if (strlen($text) > 0) {
-            $text = "<div class='alert $class alert-dismissible fade show' role='alert'>$text</div>";
-        }
+        require "views/alert.php";
 
         return $text . $html;
     }
@@ -931,7 +705,7 @@ class PHPBootstrapTableEdit
      *
      * @return string html
      */
-    public function get_pagination($sql, $sql_param, $page, $limit)
+    public function get_pagination(string $sql, array $sql_param, int $page, int $limit): string
     {
 
         // count how many records we have
@@ -980,45 +754,10 @@ class PHPBootstrapTableEdit
         // carry settings in qs
         $qs = $this->get_query_string(['_page']);
 
-        $html = '';
-        foreach ($arr as $key => $val) {
+        $html_final = '';
+        include "views/get_pagination.php";
 
-            $css_active = '';
-            if ($val == $page) {
-                $css_active = 'active';
-            }
-
-            if ($val == '...') {
-                $html .= "<li class='page-item disabled'><a class='page-link' href='#'>...</a></li>\n";
-            } else {
-                $html .= "<li class='page-item $css_active'><a class='page-link' href='?_page=$val&$qs'>$val</a></li>\n";
-            }
-
-        }
-
-        $css_prev = "disabled";
-        $prev = $page;
-        if ($page != 1) {
-            $css_prev = "";
-            $prev = $page - 1;
-        }
-
-        $css_next = "disabled";
-        $next = $page;
-        if ($page < $total_page) {
-            $css_next = "";
-            $next = $page + 1;
-        }
-
-        return "
-        <nav aria-label='pagination'>
-        <ul class='pagination {$this->css['pagination']}'>
-            <li class='page-item $css_prev'><a class='page-link' href='?_page=$prev&$qs'><span>&laquo;</span></a></li>
-            $html
-            <li class='page-item $css_next'><a class='page-link' href='?_page=$next&$qs'><span>&raquo;</span></a></li>
-        </ul>
-        </nav>
-        ";
+        return $html_final;
     }
 
     /**
@@ -1028,7 +767,7 @@ class PHPBootstrapTableEdit
      *
      * @return string html
      */
-    public function get_query_string($exclude = array())
+    public function get_query_string(array $exclude = []): string
     {
 
         // system parameters to always carry on the querystring
@@ -1078,7 +817,7 @@ class PHPBootstrapTableEdit
      *
      * @return string new name/title
      */
-    public function get_label($field, $context)
+    public function get_label(string $field, string $context): string
     {
 
         $arr = array();
@@ -1097,7 +836,7 @@ class PHPBootstrapTableEdit
             $field = ucwords(strtolower($field));
         }
 
-        return $this->c($field);
+        return $field;
 
     }
 
@@ -1107,10 +846,11 @@ class PHPBootstrapTableEdit
      * @param string $field          the field name
      * @param string $value          the field's current value
      * @param string $add_or_edit    context, are we on the add or edit page
+     * @param bool   $input_only     only return the input, no other html, no title/label
      *
      * @return string html
      */
-    public function get_input($field, $value, $add_or_edit, $input_only = false)
+    public function get_input(string $field, string $value, string $add_or_edit, bool $input_only = false): string
     {
 
         // these are saved into settings[]
@@ -1180,7 +920,7 @@ class PHPBootstrapTableEdit
             list($label, $html) = $this->html_input($field, $value, $label_text, $settings, $attr);
         }
 
-        $colspan = $settings['colspan'] ?? 12;
+        $colspan = intval($settings['colspan'] ?? 12);
         $div_class = $settings['div_class'] ?? '';
 
         // special mode, might be used for ajax requests, only return the input/select
@@ -1215,25 +955,20 @@ class PHPBootstrapTableEdit
             $file_class = 'input-group';
         }
 
-        // floating input layout
+        // populate $html_final
+        $html_final = '';
         if ($floating) {
-            return "
-            <div class='col-sm-$colspan mb-4 $div_class '>
-                <div class='form-floating $file_class'>
-                $html
-                $label
-                </div>
-            </div>
-            ";
+
+           // floating style
+           require "views/get_input_0.php";     
+
+        } else {
+
+           // non floating style
+           require "views/get_input_1.php";     
         }
 
-        // non floating, label on top
-        return "
-        <div class='col-sm-$colspan mb-4 $div_class '>
-            $label
-            $html
-        </div>
-        ";
+        return $html_final;
 
     }
 
@@ -1243,20 +978,18 @@ class PHPBootstrapTableEdit
      * @param string $field       the name attribute
      * @param string $value       the value attribute
      * @param string $label       the field's visible title
-     * @param string $settings    non-attribute internal settings
+     * @param array  $settings    non-attribute internal settings
      * @param string $attr        other attribute/properties
      *
      * @return array [label, html]
      */
-    public function html_input($field, $value, $label, $settings, $attr)
+    public function html_input(string $field, string $value, string $label, array $settings, string $attr): array
     {
 
         $type = $settings['type'] ?? 'text';
         $class = $settings['class'] ?? '';
-        $value = $this->c($value);
 
-        $label = "<label for='f_$field' class='form-label'>$label</label>";
-        $html = "<input type='$type' name='$field' value='$value' class='form-control $class' id='f_$field' $attr>";
+        require "views/html_input.php";
 
         // no label on hidden input
         if ($type == 'hidden') {
@@ -1272,18 +1005,18 @@ class PHPBootstrapTableEdit
      * @param string $field       the name attribute
      * @param string $value       the text
      * @param string $label       the field's visible title
-     * @param string $settings    non-attribute internal settings
+     * @param array  $settings    non-attribute internal settings
      * @param string $attr        other attribute/properties
      *
      * @return array [label, html]
      */
-    public function html_textarea($field, $value, $label, $settings, $attr)
+    public function html_textarea(string $field, string $value, string $label, array $settings, string $attr): array
     {
 
         $class = $settings['class'] ?? '';
 
-        $label = "<label for='f_$field' class='form-label'>$label</label>";
-        $html = "<textarea name='$field' class='form-control $class' id='f_$field' $attr>$value</textarea>";
+        require "views/html_textarea.php";
+
         return [$label, $html];
     }
 
@@ -1293,13 +1026,13 @@ class PHPBootstrapTableEdit
      * @param string $field       the name attribute
      * @param string $value       the value attribute
      * @param string $label       the field's visible title
-     * @param string $settings    non-attribute internal settings
+     * @param array  $settings    non-attribute internal settings
      * @param string $attr        other attribute/properties
      * @param bool   $is_datalist change or <datalist> from <select>
      *
      * @return array [label, html]
      */
-    public function html_select($field, $value, $label, $settings, $attr, $is_datalist = false)
+    public function html_select(string $field, string $value, string $label, array $settings, string $attr, bool $is_datalist = false): array
     {
 
         $sql = $settings['sql'] ?? '';
@@ -1335,36 +1068,8 @@ class PHPBootstrapTableEdit
 
         $result = $this->query($sql, $sql_param);
 
-        $html = "<option value=''></option>";
-        foreach ($result as $row) {
+        require "views/html_select.php";
 
-            $val = (string) current($row); // first column is expected to be the non-visible value
-            $opt = next($row); // second column is expected to be the visible option
-
-            $selected = '';
-            if (is_array($value) && array_search($val, $value, true) !== false) {
-                $selected = "selected";
-            }
-
-            if (is_string($value) && $value === $val) {
-                $selected = "selected";
-            }
-
-            $html .= "<option value='" . $this->c($val) . "' $selected>" . $this->c($opt) . "</option>\n";
-        }
-
-        $label = "<label for='f_$field' class='form-label'>$label</label>";
-
-        // bootstrap style of datalist
-        if ($is_datalist) {
-            $html = "
-            <input id='f_$field' list='f_{$field}_datalist' class='form-control $class' $attr>
-            <datalist id='f_{$field}_datalist'>$html</datalist>
-            ";
-            return [$label, $html];
-        }
-
-        $html = "<select name='{$field}{$brackets}' id='f_$field' class='form-select $class' $multiple $attr>$html</select>";
         return [$label, $html];
 
     }
@@ -1375,13 +1080,13 @@ class PHPBootstrapTableEdit
      * @param string $field       the name attribute
      * @param string $value       the value attribute
      * @param string $label       the field's visible title
-     * @param string $settings    non-attribute internal settings
+     * @param array  $settings    non-attribute internal settings
      * @param string $attr        other attribute/properties
      * @param bool   $is_radio    change to radio inputs, default is checkbox
      *
      * @return array [label, html]
      */
-    public function html_checkbox($field, $value, $label, $settings, $attr, $is_radio = false)
+    public function html_checkbox(string $field, string $value, string $label, array $settings, string $attr, bool $is_radio = false): array
     {
 
         $sql = $settings['sql'] ?? '';
@@ -1421,30 +1126,7 @@ class PHPBootstrapTableEdit
 
         $result = $this->query($sql, $sql_param);
 
-        $i = -1;
-        $html = "<label for='f_{$field}_0' class='form-label'>" . $this->c($label) . "</label><br>";
-        foreach ($result as $row) {
-
-            $i++;
-            $val = (string) current($row); // first column is expected to be the non-visible value
-            $opt = next($row); // second column is expected to be the visible option
-
-            $checked = '';
-            if (is_array($value) && array_search($val, $value, true) !== false) {
-                $checked = 'checked';
-            }
-
-            if (is_string($value) && $value === $val) {
-                $checked = 'checked';
-            }
-
-            $html .= "
-            <div class='form-check $div_class'>
-                <input type='$checkbox_or_radio' name='{$field}{$brackets}' class='form-check-input $class' id='f_{$field}_$i' value='" . $this->c($val) . "' $attr $checked>
-                <label for='f_{$field}_$i' class='form-label'>" . $this->c($opt) . "</label>
-            </div>
-            ";
-        }
+        require "views/html_checkbox.php";
 
         return ['', $html];
 
@@ -1456,12 +1138,12 @@ class PHPBootstrapTableEdit
      * @param string $field       the name attribute
      * @param string $value       binary or filename, not displayed, used for trigger removal checkbox option
      * @param string $label       the field's visible title
-     * @param string $settings    non-attribute internal settings
+     * @param array  $settings    non-attribute internal settings
      * @param string $attr        other attribute/properties
      *
      * @return array [label, html]
      */
-    public function html_file($field, $value, $label, $settings, $attr)
+    public function html_file(string $field, string $value, string $label, array $settings, string $attr): array
     {
 
         $id = intval($_GET[$this->identity_name] ?? $_POST[$this->identity_name] ?? 0);
@@ -1476,46 +1158,27 @@ class PHPBootstrapTableEdit
             $is_image = true;
         }
 
-        // two styles of links, image with thumbnail and non-image
-        $html = "<a href='$url' id='f_{$field}_link' class='input-group-text file_link' style='background-image: url($url); background-size: cover; min-width: 100px; color: transparent;' target='_blank'>$ext</a>";
-        if (!$is_image) {
-            $html = "<a href='$url' id='f_{$field}_link' class='input-group-text' target='_blank'>$ext</a>";
-        }
-
-        // append 'accept' attribute if it's not already there
-        if (strpos($attr, "accept='") === false) {
-            if ($is_image) {
-                $attr .= " accept='.gif,.png,.jpg' ";
-            } else {
-                $attr .= " accept='.$ext' ";
-            }
-
-        }
-
-        // trash icon/checkbox to delete existing file
-        $html .= "<span class='input-group-text'><label class='file_trash' title='{$this->i18n['delete_file']}'><input type='checkbox' class='form-check-input' name='{$field}_delete' value='1'><span></span></label></span>";
-
-        // no image, then no extra html needed
-        if (strlen($value ?? '') == 0) {
-            $html = '';
-        }
-
-        $label = "<label for='f_$field' class='form-label'>" . $this->c($label) . "</label>";
-
-        if ($this->floating) {
-            $html = "<input type='$type' name='$field' class='form-control $class' id='f_$field' $attr>$html";
-        } else {
-            $html = "
-            <div class='input-group'>
-                <input type='$type' name='$field' class='form-control $class' id='f_$field' $attr>
-                $html
-            </div>
-            ";
-        }
+        require "views/html_file.php";
 
         return [$label, $html];
 
     }
+
+
+    /**
+     * display continue link
+     *
+     * @param string $url       the url link
+     *
+     * @return void
+     */
+    public function continue_link(string $url): void
+    {
+
+        require "views/continue_link.php";
+
+    }
+
 
     /**
      * get binary file upload
@@ -1523,9 +1186,9 @@ class PHPBootstrapTableEdit
      * @param string $field       the field name
      * @param string $add_or_edit context for what settings to use
      *
-     * @return string binary
+     * @return mixed              binary string, string filename, or null 
      */
-    public function get_upload($field, $add_or_edit)
+    public function get_upload(string $field, string $add_or_edit): mixed
     {
 
         // get settings from user defined $edit or $add property array
@@ -1557,6 +1220,7 @@ class PHPBootstrapTableEdit
 
         // path specified, storing file in the filesystem, save filename in database
         if (strlen($path) > 0) {
+
             if (!move_uploaded_file($tmp_name, "$path/$filename")) {
                 return null;
             }
@@ -1579,12 +1243,12 @@ class PHPBootstrapTableEdit
      *
      * @return string the safer filename
      */
-    public function get_filename($filename, $ext, $path, $field)
+    public function get_filename(string $filename, string $ext, string $path, string $field): string
     {
 
         // no path means nothing to do here, file is going into the database as a blob
         if (strlen($path) == 0) {
-            return;
+            return "";
         }
 
         $id = intval($_POST[$this->identity_name] ?? 0);
@@ -1628,7 +1292,7 @@ class PHPBootstrapTableEdit
      *
      * @return bool true = success
      */
-    public function image_resize($filename, $input_ext, $output_ext, $max_width, $max_height)
+    public function image_resize(string $filename, string $input_ext, string $output_ext, int $max_width, int $max_height): bool
     {
 
         $valid = ['jpg', 'gif', 'png'];
@@ -1704,7 +1368,7 @@ class PHPBootstrapTableEdit
      *
      * @return bool true = success
      */
-    public function image_crop($filename, $input_ext, $output_ext, $desired_width, $desired_height)
+    public function image_crop(string $filename, string $input_ext, string $output_ext, int $desired_width, int $desired_height): bool
     {
 
         $valid = ['jpg', 'gif', 'png'];
@@ -1777,7 +1441,7 @@ class PHPBootstrapTableEdit
      *
      * @return void
      */
-    public function image_exif_rotate($filename, $ext)
+    public function image_exif_rotate(string $filename, string $ext): void
     {
 
         if (!function_exists('imagerotate')) {
