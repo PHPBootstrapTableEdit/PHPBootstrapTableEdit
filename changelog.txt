@@ -1,4 +1,10 @@
 
+0.0.8 2024-10-13
+- mysql required an alias in get_pagination query, thanks M
+- fixes to deal with binaries with pgsql
+- blank strings now saved as null, pgsql does not want blank strings for dates
+- date and binary fields fixed/changed in example.sql
+
 0.0.7 2024-04-29
 - fixed html escape in textarea
 - moved html into views

@@ -4,7 +4,7 @@
  * https://github.com/PHPBootstrapTableEdit/PHPBootstrapTableEdit
  *
  * @license MIT
- * @version 0.0.7
+ * @version 0.0.8
  *
  */
 
@@ -208,6 +208,7 @@ class PHPBootstrapTableEdit
         }
 
         $result = $this->query($this->edit_sql, $this->edit_sql_param);
+        $result = $this->stream_to_string($result);
 
         require "views/edit.php";
 
@@ -262,14 +263,14 @@ class PHPBootstrapTableEdit
                 $value = $this->get_upload($field, 'edit');
             }
 
-            $str_1 .= "`$field`, ";
+            $str_1 .= "$field, ";
             $sql_param[":$field"] = $value;
 
         }
         $str_1 = trim($str_1, ', ');
         $str_2 = implode(', ', array_keys($sql_param));
 
-        $sql = "insert into `{$this->table_name}` ($str_1) values ($str_2)";
+        $sql = "insert into {$this->table_name} ($str_1) values ($str_2)";
         $id = $this->query($sql, $sql_param);
 
         // call closure, if defined
@@ -356,12 +357,12 @@ class PHPBootstrapTableEdit
             }
 
             // building the sql string and gathering params
-            $sql .= " `$field` = :$field, ";
+            $sql .= " $field = :$field, ";
             $sql_param[":$field"] = $value;
         }
         $sql = rtrim($sql, ', ');
 
-        $sql = "update `{$this->table_name}` set $sql where `{$this->identity_name}` = :id";
+        $sql = "update {$this->table_name} set $sql where {$this->identity_name} = :id";
         $this->query($sql, $sql_param);
 
         // call closure, if defined
@@ -402,7 +403,7 @@ class PHPBootstrapTableEdit
         }
 
         $this->delete_file($id);
-        $sql = "delete from `{$this->table_name}` where `{$this->identity_name}` = :id";
+        $sql = "delete from {$this->table_name} where {$this->identity_name} = :id";
         $this->query($sql, array(':id' => $id));
 
         // call closure, if defined
@@ -432,7 +433,26 @@ class PHPBootstrapTableEdit
     {
 
         $sth = $this->dbh->prepare($sql);
-        $sth->execute($sql_param);
+        $driver_name = $this->dbh->getAttribute(\PDO::ATTR_DRIVER_NAME);
+
+        foreach($sql_param as $key => &$val) {
+
+            // make empty strings null, psql does not like '' for dates
+            if (is_string($val) && strlen($val) == 0) {
+                $val = null;
+            }
+
+            // pgsql wants binaries explicitly bound as lob/binary
+            if ($driver_name == 'pgsql' && $this->is_binary($val)) {
+                $sth->bindParam($key, $val, \PDO::PARAM_LOB);
+                continue;
+            }
+    
+            $sth->bindParam($key, $val, \PDO::PARAM_STR);
+
+        }
+
+        $sth->execute();
 
         // updates + deletes return number of rows affected
         if (preg_match('/^(update|delete)/i', ltrim($sql))) {
@@ -444,8 +464,8 @@ class PHPBootstrapTableEdit
             return $this->dbh->lastInsertId();
         }
 
-        // selects return the data
-        return $sth->fetchAll(\PDO::FETCH_ASSOC);
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);;
+        
     }
 
     /**
@@ -519,8 +539,10 @@ class PHPBootstrapTableEdit
             die("error cannot locate expected entry in edit[field][file_extension]");
         }
 
-        $sql = "select * from `{$this->table_name}` where `{$this->identity_name}` = :id";
+        $sql = "select * from {$this->table_name} where {$this->identity_name} = :id";
         $result = $this->query($sql, array(':id' => $id));
+        $result = $this->stream_to_string($result);
+
         if (count($result) != 1) {
             die("record not found");
         }
@@ -615,8 +637,9 @@ class PHPBootstrapTableEdit
         $options = $this->edit;
 
         // get filenames, if any
-        $sql = "select * from `{$this->table_name}` where `{$this->identity_name}` = :id";
+        $sql = "select * from {$this->table_name} where {$this->identity_name} = :id";
         $result = $this->query($sql, array(':id' => $id));
+        $result = $this->stream_to_string($result);
         if (count($result) != 1) {
             return 0;
         }
@@ -709,7 +732,7 @@ class PHPBootstrapTableEdit
     {
 
         // count how many records we have
-        $sql = "select count(1) as records from ($sql)";
+        $sql = "select count(1) as records from ($sql) xalias";
         $result = $this->query($sql, $sql_param);
         $records = intval($result[0]['records'] ?? 0);
 
@@ -1181,7 +1204,7 @@ class PHPBootstrapTableEdit
 
 
     /**
-     * get binary file upload
+     * process binary file uploads
      *
      * @param string $field       the field name
      * @param string $add_or_edit context for what settings to use
@@ -1252,7 +1275,7 @@ class PHPBootstrapTableEdit
         }
 
         $id = intval($_POST[$this->identity_name] ?? 0);
-        $chars = str_split("\0\r\n\t!?[]/\=<>:;,`'\"^%&$#*()|~{}%+@");
+        $chars = str_split("\0\r\n\t!?[]/\=<>:;,'\"^%&$#*()|~{}%+@");
 
         $filename = substr(@pathinfo($filename)['filename'], 0, 200);  // remove extension
         $filename = str_replace($chars, '', $filename);                // remove offending chars
@@ -1489,6 +1512,51 @@ class PHPBootstrapTableEdit
         }
 
         unset($image);
+    }
+
+    /**
+     * determine if data is binary
+     *
+     * @param mixed  $data
+     *
+     * @return bool
+     */
+    public function is_binary(mixed $data): bool
+    {        
+
+        return ! mb_check_encoding($data, 'UTF-8');
+
+    }
+
+    /**
+     * binaries from pgsql return from pdo as a stream, convert them to strings like other databases
+     *
+     * @param array $result
+     *
+     * @return array
+     */
+    public function stream_to_string(array &$result): array
+    {        
+
+        $cnt = count($result);
+        for ($i = 0; $i < $cnt; $i++) {
+
+            $row = $result[$i];
+
+            foreach ($row as $key => $val) {
+
+                if( !(isset($val) && is_resource($val) && get_resource_type($val) == 'stream')) {
+                    continue;
+                }
+
+                $row[$key] = stream_get_contents($val);
+                $result[$i] = $row;
+
+            }
+        }
+
+        return $result;
+
     }
 
 }
